@@ -11,10 +11,12 @@ import com.rent_vehicle.exception.ErrorCode;
 import com.rent_vehicle.repository.BookingRepository;
 import com.rent_vehicle.repository.ReviewRepository;
 import com.rent_vehicle.repository.UserRepository;
+import com.rent_vehicle.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,7 +31,9 @@ public class ReviewService {
     private final BookingRepository bookingRepository;
     private final UserRepository userRepository;
 
-    public ReviewResponse createReview(Long userId, CreateReviewRequest request) {
+    @PreAuthorize("hasAnyAuthority('USER','ADMIN')")
+    public ReviewResponse createReview(CreateReviewRequest request) {
+        Long userId = SecurityUtils.getCurrentUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
@@ -57,9 +61,17 @@ public class ReviewService {
         return toResponse(saved);
     }
 
+    @PreAuthorize("hasAnyAuthority('USER','ADMIN')")
     public ReviewResponse updateReview(Long reviewId, CreateReviewRequest request) {
         Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new AppException(ErrorCode.REVIEW_NOT_FOUND));
+
+        Long actorId = SecurityUtils.getCurrentUserId();
+        boolean isAdmin = SecurityUtils.hasAuthority("ADMIN");
+
+        if (!isAdmin && !review.getUser().getId().equals(actorId)) {
+            throw new AppException(ErrorCode.REVIEW_NOT_AUTHORIZED);
+        }
 
         // Validate rating
         if (request.getRating() < 1 || request.getRating() > 5) {
@@ -72,9 +84,18 @@ public class ReviewService {
         return toResponse(reviewRepository.save(review));
     }
 
+    @PreAuthorize("hasAnyAuthority('USER','ADMIN')")
     public void deleteReview(Long reviewId) {
         Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new AppException(ErrorCode.REVIEW_NOT_FOUND));
+
+        Long actorId = SecurityUtils.getCurrentUserId();
+        boolean isAdmin = SecurityUtils.hasAuthority("ADMIN");
+
+        if (!isAdmin && !review.getUser().getId().equals(actorId)) {
+            throw new AppException(ErrorCode.REVIEW_NOT_AUTHORIZED);
+        }
+
         reviewRepository.delete(review);
     }
 
@@ -95,8 +116,10 @@ public class ReviewService {
                 .collect(Collectors.toList());
     }
 
+    @PreAuthorize("hasAnyAuthority('USER','ADMIN')")
     @Transactional(readOnly = true)
-    public List<ReviewResponse> getReviewsByUser(Long userId) {
+    public List<ReviewResponse> getReviewsByUser() {
+        Long userId = SecurityUtils.getCurrentUserId();
         userRepository.findById(userId)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
@@ -118,6 +141,7 @@ public class ReviewService {
     }
 
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('ADMIN')")
     public List<ReviewResponse> getAll() {
         return reviewRepository.findAll().stream()
                 .map(this::toResponse)
@@ -125,6 +149,7 @@ public class ReviewService {
     }
 
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('ADMIN')")
     public PageResponse<ReviewResponse> getAllPaginated(int page, int size) {
         Pageable pageable = PageRequest.of(page - 1, size);
         Page<Review> pageData = reviewRepository.findAll(pageable);

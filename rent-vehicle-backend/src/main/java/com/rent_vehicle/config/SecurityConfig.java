@@ -3,6 +3,7 @@ package com.rent_vehicle.config;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -32,14 +33,15 @@ public class SecurityConfig {
 
     private final String[] PUBLIC_ENDPOINTS = {
             "/auth/login",
-            "/auth/admin/**",
             "/auth/register",
             "/auth/refresh",
+            "/auth/admin/login",
+            "/auth/admin/verify",
             "/auth/oauth2/**",
-            "/vehicles/**",
-            "/vehicle-types/**",
-            "/vehicle-models/**",
-            "/payments/vnpay/callback"
+            "/auth/password/forgot/request-code",
+            "/auth/password/forgot/confirm",
+            "/payments/vnpay/callback",
+            "/error"
     };
 
     @Bean
@@ -53,6 +55,10 @@ public class SecurityConfig {
         httpSecurity.authorizeHttpRequests(request ->
                 request
                         .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
+                        .requestMatchers(HttpMethod.GET, "/vehicles/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/vehicle-types/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/vehicle-models/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/reviews/**").permitAll()
                         .anyRequest().authenticated()
         );
 
@@ -72,6 +78,7 @@ public class SecurityConfig {
     @Bean
     JwtAuthenticationConverter jwtAuthenticationConverter() {
         JwtGrantedAuthoritiesConverter jwtGrantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
+        jwtGrantedAuthoritiesConverter.setAuthoritiesClaimName("role");
         jwtGrantedAuthoritiesConverter.setAuthorityPrefix("");
         JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();
         jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(jwtGrantedAuthoritiesConverter);

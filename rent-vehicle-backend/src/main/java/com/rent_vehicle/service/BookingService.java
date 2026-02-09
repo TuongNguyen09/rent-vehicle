@@ -13,11 +13,13 @@ import com.rent_vehicle.repository.BookingRepository;
 import com.rent_vehicle.repository.UserRepository;
 import com.rent_vehicle.repository.VehicleModelRepository;
 import com.rent_vehicle.repository.VehicleRepository;
+import com.rent_vehicle.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,12 +40,14 @@ public class BookingService {
     private final VehicleRepository vehicleRepository;
     private final BookingEmailEventProducer bookingEmailEventProducer;
 
-    public BookingResponse createBooking(Long userId, CreateBookingRequest request) {
+    @PreAuthorize("hasAnyAuthority('USER','ADMIN')")
+    public BookingResponse createBooking(CreateBookingRequest request) {
         if (request.getVehicleModelId() == null || request.getVehicleId() == null
                 || request.getStartDate() == null || request.getEndDate() == null) {
             throw new AppException(ErrorCode.INVALID_REQUEST);
         }
 
+        Long userId = SecurityUtils.getCurrentUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
@@ -128,6 +132,7 @@ public class BookingService {
         return toResponse(saved);
     }
 
+    @PreAuthorize("hasAuthority('ADMIN')")
     public BookingResponse approveBooking(Long bookingId) {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new AppException(ErrorCode.BOOKING_NOT_FOUND));
@@ -163,9 +168,17 @@ public class BookingService {
         return toResponse(saved);
     }
 
+    @PreAuthorize("hasAnyAuthority('USER','ADMIN')")
     public BookingResponse cancelBooking(Long bookingId) {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new AppException(ErrorCode.BOOKING_NOT_FOUND));
+
+        Long actorId = SecurityUtils.getCurrentUserId();
+        boolean isAdmin = SecurityUtils.hasAuthority("ADMIN");
+
+        if (!isAdmin && !booking.getUser().getId().equals(actorId)) {
+            throw new AppException(ErrorCode.BOOKING_NOT_AUTHORIZED);
+        }
 
         if (booking.getStatus().equals(Booking.BookingStatus.completed) ||
                 booking.getStatus().equals(Booking.BookingStatus.canceled)) {
@@ -177,21 +190,31 @@ public class BookingService {
     }
 
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAnyAuthority('USER','ADMIN')")
     public BookingResponse getBookingById(Long bookingId) {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new AppException(ErrorCode.BOOKING_NOT_FOUND));
+
+        Long actorId = SecurityUtils.getCurrentUserId();
+        boolean isAdmin = SecurityUtils.hasAuthority("ADMIN");
+
+        if (!isAdmin && !booking.getUser().getId().equals(actorId)) {
+            throw new AppException(ErrorCode.BOOKING_NOT_AUTHORIZED);
+        }
+
         return toResponse(booking);
     }
 
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAnyAuthority('USER','ADMIN')")
     public PageResponse<BookingResponse> getMyBookings(
-            Long userId,
             String status,
             LocalDate fromDate,
             LocalDate toDate,
             int page,
             int size
     ) {
+        Long userId = SecurityUtils.getCurrentUserId();
         userRepository.findById(userId)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
@@ -225,6 +248,7 @@ public class BookingService {
     }
 
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('ADMIN')")
     public PageResponse<BookingResponse> getAllBookings(
             String status,
             LocalDate fromDate,

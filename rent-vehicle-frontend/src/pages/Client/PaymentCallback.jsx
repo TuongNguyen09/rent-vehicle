@@ -1,4 +1,4 @@
-﻿import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { FaCheckCircle, FaTimesCircle, FaHome, FaHistory, FaRedo } from 'react-icons/fa';
 
 const PaymentCallback = () => {

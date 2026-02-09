@@ -28,7 +28,7 @@ const AdminVerify = () => {
     const handleVerify = async (e) => {
         e.preventDefault();
         if (!username) {
-            setError('Khong tim thay username de xac minh. Vui long dang nhap lai.');
+            setError('Không tìm thấy username để xác minh. Vui lòng đăng nhập lại.');
             return;
         }
 
@@ -41,10 +41,10 @@ const AdminVerify = () => {
                 await refreshUser();
                 navigate(redirectTo, { replace: true });
             } else {
-                setError(response.message || 'Ma xac minh khong hop le.');
+                setError(response.message || 'Mã xác minh không hợp lệ.');
             }
         } catch (err) {
-            setError(err?.response?.data?.message || 'Khong the xac minh ma OTP.');
+            setError(err?.response?.data?.message || 'Không thể xác minh mã OTP.');
         } finally {
             setLoading(false);
         }
@@ -59,16 +59,16 @@ const AdminVerify = () => {
                     className="text-sm text-gray-500 hover:text-gray-700 inline-flex items-center gap-2 mb-4"
                 >
                     <FaArrowLeft />
-                    Quay lai
+                    Quay lại
                 </button>
 
                 <div className="text-center mb-6">
                     <div className="w-14 h-14 mx-auto rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mb-3">
                         <FaEnvelopeOpenText className="text-2xl" />
                     </div>
-                    <h1 className="text-2xl font-bold text-gray-900">Xac minh Admin</h1>
+                    <h1 className="text-2xl font-bold text-gray-900">Xác minh Admin</h1>
                     <p className="text-sm text-gray-500 mt-1">
-                        Ma OTP da duoc gui toi email dang nhap: <span className="font-medium">{username || '---'}</span>
+                        Mã OTP đã được gửi tới email đăng nhập: <span className="font-medium">{username || '---'}</span>
                     </p>
                 </div>
 
@@ -80,7 +80,7 @@ const AdminVerify = () => {
 
                 <form onSubmit={handleVerify} className="space-y-4">
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Ma xac minh</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Mã xác minh</label>
                         <input
                             type="text"
                             value={code}
@@ -99,10 +99,10 @@ const AdminVerify = () => {
                         {loading ? (
                             <span className="inline-flex items-center gap-2">
                                 <FaSpinner className="animate-spin" />
-                                DANG XAC MINH...
+                                ĐANG XÁC MINH...
                             </span>
                         ) : (
-                            'XAC MINH VA DANG NHAP'
+                            'XÁC MINH VÀ ĐĂNG NHẬP'
                         )}
                     </button>
                 </form>

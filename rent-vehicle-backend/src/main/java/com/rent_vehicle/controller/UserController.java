@@ -3,7 +3,6 @@ package com.rent_vehicle.controller;
 import com.rent_vehicle.dto.response.ApiResponse;
 import com.rent_vehicle.dto.response.UserResponse;
 import com.rent_vehicle.service.UserService;
-import com.rent_vehicle.util.SecurityUtils;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -21,19 +20,17 @@ public class UserController {
 
     @GetMapping("/me")
     public ApiResponse<UserResponse> getMyProfile() {
-        Long userId = SecurityUtils.getCurrentUserId();
         return ApiResponse.<UserResponse>builder()
                 .message("User profile retrieved successfully!")
-                .result(userService.getUserById(userId))
+                .result(userService.getCurrentUserProfile())
                 .build();
     }
 
     @PutMapping("/me")
     public ApiResponse<UserResponse> updateMyProfile(@RequestParam String fullName) {
-        Long userId = SecurityUtils.getCurrentUserId();
         return ApiResponse.<UserResponse>builder()
                 .message("User profile updated successfully!")
-                .result(userService.updateUser(userId, fullName))
+                .result(userService.updateCurrentUserProfile(fullName))
                 .build();
     }
 

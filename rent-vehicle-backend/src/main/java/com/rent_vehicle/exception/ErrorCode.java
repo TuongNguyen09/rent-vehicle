@@ -28,6 +28,10 @@ public enum ErrorCode {
     OAUTH_EMAIL_NOT_VERIFIED(2011, "Email not verified by OAuth provider", HttpStatus.BAD_REQUEST),
     INVALID_OTP(2012, "Invalid verification code", HttpStatus.BAD_REQUEST),
     OTP_EXPIRED(2013, "Verification code expired", HttpStatus.BAD_REQUEST),
+    PASSWORD_CHANGE_NOT_ALLOWED(2014, "Password update is only available for local accounts", HttpStatus.BAD_REQUEST),
+    INVALID_PASSWORD(2015, "Password must be at least 6 characters", HttpStatus.BAD_REQUEST),
+    INVALID_OLD_PASSWORD(2016, "Current password is incorrect", HttpStatus.BAD_REQUEST),
+    EMAIL_SEND_FAILED(2017, "Email service is unavailable. Please try again later", HttpStatus.SERVICE_UNAVAILABLE),
 
     // --- VEHICLE MANAGEMENT ---
     VEHICLE_TYPE_NOT_FOUND(3001, "Vehicle type not found", HttpStatus.NOT_FOUND),

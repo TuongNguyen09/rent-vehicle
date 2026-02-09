@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { FaCalendarAlt, FaMapMarkerAlt, FaCreditCard, FaMoneyBillWave, FaUniversity, FaCheckCircle } from 'react-icons/fa';
 import { createBooking } from '../../services/bookingService';

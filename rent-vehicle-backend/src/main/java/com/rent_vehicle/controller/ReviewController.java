@@ -5,7 +5,6 @@ import com.rent_vehicle.dto.request.CreateReviewRequest;
 import com.rent_vehicle.dto.response.ReviewResponse;
 import com.rent_vehicle.dto.response.PageResponse;
 import com.rent_vehicle.service.ReviewService;
-import com.rent_vehicle.util.SecurityUtils;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -23,10 +22,9 @@ public class ReviewController {
 
     @PostMapping
     public ApiResponse<ReviewResponse> createReview(@RequestBody CreateReviewRequest request) {
-        Long userId = SecurityUtils.getCurrentUserId();
         return ApiResponse.<ReviewResponse>builder()
                 .message("Review created successfully!")
-                .result(reviewService.createReview(userId, request))
+                .result(reviewService.createReview(request))
                 .build();
     }
 
@@ -68,10 +66,9 @@ public class ReviewController {
 
     @GetMapping("/user/my-reviews")
     public ApiResponse<List<ReviewResponse>> getMyReviews() {
-        Long userId = SecurityUtils.getCurrentUserId();
         return ApiResponse.<List<ReviewResponse>>builder()
                 .message("Your reviews retrieved successfully!")
-                .result(reviewService.getReviewsByUser(userId))
+                .result(reviewService.getReviewsByUser())
                 .build();
     }
 

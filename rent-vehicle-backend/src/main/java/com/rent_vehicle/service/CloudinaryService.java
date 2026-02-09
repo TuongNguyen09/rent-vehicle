@@ -8,6 +8,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -30,6 +31,7 @@ public class CloudinaryService {
      * @param folder Folder name in Cloudinary (e.g., "vehicles", "avatars")
      * @return URL of the uploaded image
      */
+    @PreAuthorize("(#folder != null && #folder.equalsIgnoreCase('avatars') && hasAnyAuthority('USER','ADMIN')) || hasAuthority('ADMIN')")
     public String uploadImage(MultipartFile file, String folder) {
         if (file == null || file.isEmpty()) {
             throw new AppException(ErrorCode.INVALID_REQUEST);
@@ -64,6 +66,7 @@ public class CloudinaryService {
      * @param folder Folder name in Cloudinary
      * @return List of URLs of uploaded images
      */
+    @PreAuthorize("(#folder != null && #folder.equalsIgnoreCase('avatars') && hasAnyAuthority('USER','ADMIN')) || hasAuthority('ADMIN')")
     public List<String> uploadImages(List<MultipartFile> files, String folder) {
         if (files == null || files.isEmpty()) {
             return new ArrayList<>();
@@ -82,6 +85,7 @@ public class CloudinaryService {
      * Delete an image from Cloudinary by URL
      * @param imageUrl The URL of the image to delete
      */
+    @PreAuthorize("hasAuthority('ADMIN')")
     public void deleteImage(String imageUrl) {
         if (imageUrl == null || imageUrl.isEmpty()) {
             return;
@@ -104,6 +108,7 @@ public class CloudinaryService {
      * Delete multiple images from Cloudinary
      * @param imageUrls List of URLs to delete
      */
+    @PreAuthorize("hasAuthority('ADMIN')")
     public void deleteImages(List<String> imageUrls) {
         if (imageUrls == null || imageUrls.isEmpty()) {
             return;

@@ -58,7 +58,7 @@ const Home = () => {
 
             <form className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
               <div className="md:col-span-4 relative group">
-                <label className="block text-xs font-bold text-gray-500 mb-1 uppercase">Địa điểm nhận xe</label>
+                <label className="block text-xs font-bold text-gray-500 mb-1 uppercase">Chi nhánh nhận xe</label>
                 <div className="flex items-center border border-gray-300 rounded-lg px-3 py-3 bg-gray-50 group-focus-within:border-primary group-focus-within:bg-white transition-all">
                   <FaMapMarkerAlt className="text-secondary mr-3 text-lg" />
                   <input type="text" placeholder="Nhập thành phố, quận, sân bay..." className="bg-transparent w-full focus:outline-none text-gray-800 font-medium placeholder-gray-400" />

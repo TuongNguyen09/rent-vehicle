@@ -18,17 +18,11 @@ const VehicleList = () => {
   
   // Filter states
   const [filters, setFilters] = useState({
-    vehicleTypeId: '',
-    brand: '',
     minPrice: '',
     maxPrice: ''
   });
   const [selectedBrands, setSelectedBrands] = useState([]);
-  const [selectedTypes, setSelectedTypes] = useState([]);
   const [appliedFilters, setAppliedFilters] = useState(null); // Trigger for apply button
-  
-  // Get unique brands from vehicles
-  const manufacturers = ["VinFast", "Toyota", "Honda", "Mazda", "Hyundai", "Kia", "Mercedes"];
   
   // Fetch vehicle types
   useEffect(() => {
@@ -56,11 +50,8 @@ const VehicleList = () => {
         };
         
         // Add filters if set
-        if (selectedTypes.length === 1) {
-          params.vehicleTypeId = selectedTypes[0];
-        }
         if (selectedBrands.length === 1) {
-          params.brand = selectedBrands[0];
+          params.vehicleTypeId = selectedBrands[0];
         }
         if (filters.minPrice) {
           params.minPrice = filters.minPrice;
@@ -111,12 +102,6 @@ const VehicleList = () => {
   const handleBrandChange = (brand) => {
     setSelectedBrands(prev => 
       prev.includes(brand) ? prev.filter(b => b !== brand) : [...prev, brand]
-    );
-  };
-  
-  const handleTypeChange = (typeId) => {
-    setSelectedTypes(prev => 
-      prev.includes(typeId) ? prev.filter(t => t !== typeId) : [...prev, typeId]
     );
   };
   
@@ -199,29 +184,13 @@ const VehicleList = () => {
 
                   <FilterSection title="Hãng xe">
                      <div className="space-y-2">
-                       {manufacturers.map((brand, idx) => (
-                         <label key={idx} className="flex items-center gap-2 cursor-pointer hover:text-primary">
-                           <input 
-                             type="checkbox" 
-                             className="rounded text-primary focus:ring-primary" 
-                             checked={selectedBrands.includes(brand)}
-                             onChange={() => handleBrandChange(brand)}
-                           />
-                           <span>{brand}</span>
-                         </label>
-                       ))}
-                     </div>
-                  </FilterSection>
-
-                  <FilterSection title="Loại xe">
-                     <div className="space-y-2">
                        {vehicleTypes.map((type) => (
                          <label key={type.id} className="flex items-center gap-2 cursor-pointer hover:text-primary">
                            <input 
                              type="checkbox" 
                              className="rounded text-primary focus:ring-primary" 
-                             checked={selectedTypes.includes(type.id)}
-                             onChange={() => handleTypeChange(type.id)}
+                             checked={selectedBrands.includes(type.id)}
+                             onChange={() => handleBrandChange(type.id)}
                            />
                            <span>{type.name}</span>
                          </label>

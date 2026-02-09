@@ -6,13 +6,12 @@ import java.time.LocalDateTime;
 
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
-@Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class UserResponse {
     Long id;
     String fullName;
     String email;
+    String authProvider;
     String role;
     String status;
     LocalDateTime createdAt;

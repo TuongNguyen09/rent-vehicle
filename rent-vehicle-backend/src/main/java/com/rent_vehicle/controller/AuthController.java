@@ -3,10 +3,14 @@ package com.rent_vehicle.controller;
 import com.nimbusds.jose.JOSEException;
 import com.rent_vehicle.dto.request.AdminLoginRequest;
 import com.rent_vehicle.dto.request.AdminVerifyOtpRequest;
+import com.rent_vehicle.dto.request.ChangePasswordConfirmRequest;
+import com.rent_vehicle.dto.request.ForgotPasswordConfirmRequest;
+import com.rent_vehicle.dto.request.ForgotPasswordRequest;
 import com.rent_vehicle.dto.response.ApiResponse;
 import com.rent_vehicle.dto.response.AuthResponse;
 import com.rent_vehicle.exception.AppException;
 import com.rent_vehicle.exception.ErrorCode;
+import com.rent_vehicle.model.User;
 import com.rent_vehicle.service.AuthService;
 import com.rent_vehicle.service.OAuth2Service;
 import com.rent_vehicle.util.CookieUtil;
@@ -110,6 +114,36 @@ public class AuthController {
                 .build();
     }
 
+    @PostMapping("/password/change/request-code")
+    public ApiResponse<?> requestChangePasswordOtp() {
+        return authService.requestChangePasswordOtp();
+    }
+
+    @PostMapping("/password/change/confirm")
+    public ApiResponse<?> confirmChangePassword(@RequestBody ChangePasswordConfirmRequest request) {
+        return authService.confirmChangePassword(
+                request.getCode(),
+                request.getOldPassword(),
+                request.getNewPassword(),
+                request.getConfirmPassword()
+        );
+    }
+
+    @PostMapping("/password/forgot/request-code")
+    public ApiResponse<?> requestForgotPasswordOtp(@RequestBody ForgotPasswordRequest request) {
+        return authService.requestForgotPasswordOtp(request.getEmail());
+    }
+
+    @PostMapping("/password/forgot/confirm")
+    public ApiResponse<?> confirmForgotPassword(@RequestBody ForgotPasswordConfirmRequest request) {
+        return authService.confirmForgotPassword(
+                request.getEmail(),
+                request.getCode(),
+                request.getNewPassword(),
+                request.getConfirmPassword()
+        );
+    }
+
     @PostMapping("/oauth2/google")
     public ApiResponse<?> googleLogin(
             @RequestBody Map<String, String> request,
@@ -185,19 +219,19 @@ public class AuthController {
         if (token == null || !jwtUtil.validateToken(token)) {
             throw new AppException(ErrorCode.UNAUTHENTICATED);
         }
-        
+
         String email = jwtUtil.getEmailFromToken(token);
-        Long userId = jwtUtil.getUserIdFromToken(token);
-        String fullName = jwtUtil.getFullNameFromToken(token);
-        String role = jwtUtil.getRoleFromToken(token);
+        User user = authService.getUserByEmail(email)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
         
         return ApiResponse.builder()
                 .message("User info retrieved")
                 .result(Map.of(
-                        "userId", userId,
-                        "email", email,
-                        "fullName", fullName,
-                        "role", role
+                        "userId", user.getId(),
+                        "email", user.getEmail(),
+                        "fullName", user.getFullName(),
+                        "role", user.getRole().name(),
+                        "authProvider", user.getAuthProvider()
                 ))
                 .build();
     }

@@ -1,8 +1,8 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 
-const AdminRoute = ({ children }) => {
-    const { loading, isAuthenticated, user } = useAuth();
+const ProtectedRoute = ({ children }) => {
+    const { loading, isAuthenticated } = useAuth();
     const location = useLocation();
 
     if (loading) {
@@ -14,14 +14,11 @@ const AdminRoute = ({ children }) => {
     }
 
     if (!isAuthenticated) {
-        return <Navigate to="/admin/login" state={{ from: location.pathname }} replace />;
-    }
-
-    if (user?.role !== 'ADMIN') {
-        return <Navigate to="/" replace />;
+        sessionStorage.setItem('postLoginRedirect', location.pathname);
+        return <Navigate to="/login" replace />;
     }
 
     return children;
 };
 
-export default AdminRoute;
+export default ProtectedRoute;

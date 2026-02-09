@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,6 +27,7 @@ public class VehicleService {
     private final VehicleRepository vehicleRepository;
     private final VehicleModelRepository vehicleModelRepository;
 
+    @PreAuthorize("hasAuthority('ADMIN')")
     public VehicleResponse create(CreateVehicleRequest request) {
         VehicleModel vehicleModel = vehicleModelRepository.findById(request.getVehicleModelId())
                 .orElseThrow(() -> new AppException(ErrorCode.VEHICLE_MODEL_NOT_FOUND));
@@ -51,6 +53,7 @@ public class VehicleService {
         return toResponse(saved);
     }
 
+    @PreAuthorize("hasAuthority('ADMIN')")
     public VehicleResponse updateStatus(Long id, String status) {
         Vehicle vehicle = vehicleRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.VEHICLE_NOT_FOUND));

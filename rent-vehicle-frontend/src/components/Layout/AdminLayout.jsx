@@ -1,15 +1,14 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import {
     FaChartPie,
     FaCar,
-    FaUsers,
     FaCalendarAlt,
-    FaStar,
     FaSignOutAlt,
     FaBars,
     FaTimes,
     FaBell,
+    FaUserShield,
 } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -20,17 +19,40 @@ const AdminLayout = () => {
     const { logout, user } = useAuth();
 
     const menuItems = [
-        { path: '/admin/dashboard', icon: <FaChartPie />, label: 'Tong quan' },
-        { path: '/admin/vehicles', icon: <FaCar />, label: 'Quan ly xe' },
-        { path: '/admin/bookings', icon: <FaCalendarAlt />, label: 'Don dat xe' },
-        { path: '/admin/users', icon: <FaUsers />, label: 'Khach hang' },
-        { path: '/admin/reviews', icon: <FaStar />, label: 'Danh gia' },
+        { path: '/admin/dashboard', icon: <FaChartPie />, label: 'Tổng quan' },
+        {
+            path: '/admin/vehicles',
+            icon: <FaCar />,
+            label: 'Quản lý xe',
+            children: [
+                { path: '/admin/vehicles/add', label: 'Thêm dòng xe mới' },
+                { path: '/admin/vehicles/brands', label: 'Quản lý hãng xe' },
+            ],
+        },
+        { path: '/admin/users', icon: <FaUserShield />, label: 'Quản lý người dùng' },
+        { path: '/admin/bookings', icon: <FaCalendarAlt />, label: 'Đơn đặt xe' },
     ];
 
     const handleLogout = async () => {
         await logout();
         navigate('/admin/login');
     };
+
+    const [showDropdown, setShowDropdown] = useState(false);
+    const dropdownRef = useRef();
+    useEffect(() => {
+        function handleClickOutside(event) {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+                setShowDropdown(false);
+            }
+        }
+        if (showDropdown) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [showDropdown]);
 
     return (
         <div className="flex h-screen bg-gray-100 relative">
@@ -63,47 +85,89 @@ const AdminLayout = () => {
                     <ul className="space-y-2 px-3">
                         {menuItems.map((item) => {
                             const isActive = location.pathname.startsWith(item.path);
+                            if (!item.children) {
+                                return (
+                                    <li key={item.path}>
+                                        <Link
+                                            to={item.path}
+                                            className={`flex items-center gap-4 px-4 py-3 rounded-lg transition-colors ${
+                                                isActive
+                                                    ? 'bg-primary text-white shadow-lg'
+                                                    : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+                                            }`}
+                                            onClick={() => window.innerWidth < 768 && setSidebarOpen(false)}
+                                        >
+                                            <span className="text-xl min-w-[20px]">{item.icon}</span>
+                                            <span
+                                                className={`font-medium transition-opacity ${
+                                                    sidebarOpen ? 'opacity-100' : 'md:opacity-0 md:hidden'
+                                                }`}
+                                            >
+                                                {item.label}
+                                            </span>
+                                        </Link>
+                                    </li>
+                                );
+                            }
+                            // Menu có children (dropdown)
+                            const isParentActive = location.pathname.startsWith(item.path);
+                            const [open, setOpen] = useState(isParentActive);
                             return (
                                 <li key={item.path}>
-                                    <Link
-                                        to={item.path}
-                                        className={`flex items-center gap-4 px-4 py-3 rounded-lg transition-colors ${
-                                            isActive
-                                                ? 'bg-primary text-white shadow-lg'
-                                                : 'text-gray-400 hover:bg-gray-800 hover:text-white'
-                                        }`}
-                                        onClick={() => window.innerWidth < 768 && setSidebarOpen(false)}
-                                    >
-                                        <span className="text-xl min-w-[20px]">{item.icon}</span>
-                                        <span
-                                            className={`font-medium transition-opacity ${
-                                                sidebarOpen ? 'opacity-100' : 'md:opacity-0 md:hidden'
-                                            }`}
+                                    <div className={`flex items-center gap-4 px-4 py-3 rounded-lg w-full transition-colors ${
+                                        isParentActive
+                                            ? 'bg-primary text-white shadow-lg'
+                                            : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+                                    }`}>
+                                        <Link
+                                            to={item.path}
+                                            className="flex items-center gap-4 flex-1 min-w-0"
+                                            onClick={() => window.innerWidth < 768 && setSidebarOpen(false)}
                                         >
-                                            {item.label}
-                                        </span>
-                                    </Link>
+                                            <span className="text-xl min-w-[20px]">{item.icon}</span>
+                                            <span
+                                                className={`font-medium flex-1 text-left transition-opacity ${
+                                                    sidebarOpen ? 'opacity-100' : 'md:opacity-0 md:hidden'
+                                                }`}
+                                            >
+                                                {item.label}
+                                            </span>
+                                        </Link>
+                                        <button
+                                            type="button"
+                                            className="ml-2 focus:outline-none"
+                                            onClick={() => setOpen((prev) => !prev)}
+                                            tabIndex={-1}
+                                        >
+                                            <svg className={`w-4 h-4 transition-transform ${open ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
+                                        </button>
+                                    </div>
+                                    {open && (
+                                        <ul className="pl-10 py-1 space-y-1">
+                                            {item.children.map((child) => (
+                                                <li key={child.path}>
+                                                    <Link
+                                                        to={child.path}
+                                                        className={`block px-2 py-2 rounded-lg text-sm transition-colors ${
+                                                            location.pathname === child.path
+                                                                ? 'bg-primary text-white shadow'
+                                                                : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+                                                        }`}
+                                                        onClick={() => window.innerWidth < 768 && setSidebarOpen(false)}
+                                                    >
+                                                        {child.label}
+                                                    </Link>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    )}
                                 </li>
                             );
                         })}
                     </ul>
                 </nav>
 
-                <div className="p-4 border-t border-gray-800">
-                    <button
-                        onClick={handleLogout}
-                        className="flex items-center gap-4 px-4 py-3 text-red-400 hover:bg-gray-800 hover:text-red-300 rounded-lg w-full transition-colors"
-                    >
-                        <FaSignOutAlt className="text-xl min-w-[20px]" />
-                        <span
-                            className={`font-medium transition-opacity ${
-                                sidebarOpen ? 'opacity-100' : 'md:opacity-0 md:hidden'
-                            }`}
-                        >
-                            Dang xuat
-                        </span>
-                    </button>
-                </div>
+                {/* Đã chuyển Đăng xuất lên header */}
             </aside>
 
             <div className="flex-1 flex flex-col overflow-hidden">
@@ -122,15 +186,39 @@ const AdminLayout = () => {
                                 3
                             </span>
                         </button>
-                        <div className="flex items-center gap-3">
-                            <img
-                                src={`https://ui-avatars.com/api/?name=${encodeURIComponent(user?.fullName || 'Admin')}&background=random`}
-                                alt="Admin"
-                                className="w-8 h-8 rounded-full"
-                            />
-                            <span className="font-bold text-gray-700 hidden sm:block">{user?.fullName || 'Admin HQ'}</span>
+                        {/* Avatar + Dropdown */}
+                        <div className="relative" ref={dropdownRef}>
+                            <button
+                                className="flex items-center gap-3 focus:outline-none"
+                                onClick={() => setShowDropdown((prev) => !prev)}
+                            >
+                                <img
+                                    src={`https://ui-avatars.com/api/?name=${encodeURIComponent(user?.fullName || 'Admin')}&background=random`}
+                                    alt="Admin"
+                                    className="w-8 h-8 rounded-full"
+                                />
+                                <span className="font-bold text-gray-700 hidden sm:block">{user?.fullName || 'Admin HQ'}</span>
+                            </button>
+                            {showDropdown && (
+                                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-50 border border-gray-100">
+                                    <Link
+                                        to="/admin/profile"
+                                        className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors"
+                                        onClick={() => setShowDropdown(false)}
+                                    >
+                                        <FaUserShield className="text-primary" /> Tài khoản
+                                    </Link>
+                                    <button
+                                        onClick={() => { setShowDropdown(false); handleLogout(); }}
+                                        className="flex items-center gap-2 px-4 py-2 text-red-500 hover:bg-gray-100 w-full text-left transition-colors"
+                                    >
+                                        <FaSignOutAlt /> Đăng xuất
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     </div>
+                
                 </header>
 
                 <main className="flex-1 overflow-x-hidden overflow-y-auto p-6">

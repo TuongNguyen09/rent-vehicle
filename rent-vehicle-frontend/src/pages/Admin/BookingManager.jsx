@@ -21,7 +21,7 @@ const BookingManager = () => {
 
     const fetchBookings = async () => {
         if (filterFromDate && filterToDate && filterFromDate > filterToDate) {
-            setFilterError('From date cannot be greater than to date.');
+            setFilterError('Ngày bắt đầu không được lớn hơn ngày kết thúc.');
             setBookings([]);
             setTotalPages(1);
             setTotalElements(0);
@@ -93,7 +93,7 @@ const BookingManager = () => {
     };
 
     const handleApprove = async (id) => {
-        if (!window.confirm('Xac nhan duyet don dat xe nay?')) return;
+        if (!window.confirm('Xác nhận duyệt đơn đặt xe này?')) return;
         setActionLoadingId(id);
         try {
             await approveBooking(id);
@@ -104,7 +104,7 @@ const BookingManager = () => {
     };
 
     const handleCancel = async (id) => {
-        if (!window.confirm('Xac nhan huy don dat xe nay?')) return;
+        if (!window.confirm('Xác nhận hủy đơn đặt xe này?')) return;
         setActionLoadingId(id);
         try {
             await cancelBooking(id);
@@ -132,12 +132,12 @@ const BookingManager = () => {
         <div className="bg-white rounded-lg shadow-sm">
             <div className="p-6 border-b border-gray-100">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <h1 className="text-2xl font-bold text-gray-800">Quan ly Dat xe</h1>
+                    <h1 className="text-2xl font-bold text-gray-800">Quản lý Đặt xe</h1>
                     <div className="flex flex-col sm:flex-row gap-4">
                         <div className="relative">
                             <input
                                 type="text"
-                                placeholder="Tim kiem don hang..."
+                                placeholder="Tìm kiếm đơn hàng..."
                                 className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 w-full sm:w-64"
                                 disabled
                             />
@@ -187,19 +187,19 @@ const BookingManager = () => {
                 <table className="w-full">
                     <thead className="bg-gray-50">
                         <tr>
-                            <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Ma don</th>
-                            <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Khach hang</th>
-                            <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Xe thue</th>
-                            <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Thoi gian</th>
-                            <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Tong tien</th>
-                            <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Trang thai</th>
-                            <th className="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Hanh dong</th>
+                            <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Mã đơn</th>
+                            <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Khách hàng</th>
+                            <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Xe thuê</th>
+                            <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Thời gian</th>
+                            <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Tổng tiền</th>
+                            <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Trạng thái</th>
+                            <th className="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Hành động</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
                         {loading ? (
                             <tr>
-                                <td colSpan="7" className="text-center py-8">Dang tai du lieu...</td>
+                                <td colSpan="7" className="text-center py-8">Đang tải dữ liệu...</td>
                             </tr>
                         ) : (
                             bookings.map((booking) => (
@@ -221,12 +221,12 @@ const BookingManager = () => {
                                     <td className="px-6 py-4">
                                         <div className="text-sm text-gray-900">{booking.vehicleModelName || '---'}</div>
                                         <div className="text-xs text-gray-500">
-                                            {booking.vehicleLicensePlate ? `Bien so: ${booking.vehicleLicensePlate}` : 'Chua gan xe'}
+                                            {booking.vehicleLicensePlate ? `Biển số: ${booking.vehicleLicensePlate}` : 'Chưa gán xe'}
                                         </div>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <div className="text-sm text-gray-900">{formatDate(booking.startDate)}</div>
-                                        <div className="text-sm text-gray-500">den {formatDate(booking.endDate)}</div>
+                                        <div className="text-sm text-gray-500">đến {formatDate(booking.endDate)}</div>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <div className="font-medium text-gray-900">{formatMoney(booking.totalPrice)}d</div>
@@ -241,7 +241,7 @@ const BookingManager = () => {
                                             <button
                                                 onClick={() => handleViewDetail(booking)}
                                                 className="text-gray-600 hover:text-gray-900 bg-gray-50 p-2 rounded hover:bg-gray-100"
-                                                title="Xem chi tiet"
+                                                title="Xem chi tiết"
                                             >
                                                 <FaEye />
                                             </button>
@@ -251,7 +251,7 @@ const BookingManager = () => {
                                                         onClick={() => handleApprove(booking.id)}
                                                         disabled={actionLoadingId === booking.id}
                                                         className="text-green-600 hover:text-green-900 bg-green-50 p-2 rounded hover:bg-green-100 disabled:opacity-60 disabled:cursor-not-allowed"
-                                                        title="Duyet don"
+                                                        title="Duyệt đơn"
                                                     >
                                                         <FaCheck />
                                                     </button>
@@ -259,7 +259,7 @@ const BookingManager = () => {
                                                         onClick={() => handleCancel(booking.id)}
                                                         disabled={actionLoadingId === booking.id}
                                                         className="text-red-600 hover:text-red-900 bg-red-50 p-2 rounded hover:bg-red-100 disabled:opacity-60 disabled:cursor-not-allowed"
-                                                        title="Huy don"
+                                                        title="Hủy đơn"
                                                     >
                                                         <FaTimes />
                                                     </button>
@@ -270,7 +270,7 @@ const BookingManager = () => {
                                                     onClick={() => handleCancel(booking.id)}
                                                     disabled={actionLoadingId === booking.id}
                                                     className="text-red-600 hover:text-red-900 bg-red-50 p-2 rounded hover:bg-red-100 disabled:opacity-60 disabled:cursor-not-allowed"
-                                                    title="Huy don"
+                                                    title="Hủy đơn"
                                                 >
                                                     <FaTimes />
                                                 </button>
@@ -295,7 +295,7 @@ const BookingManager = () => {
                                 : 'bg-white border border-gray-300 hover:bg-gray-50 text-gray-700'
                         }`}
                     >
-                        Quay lai
+                        Quay lại
                     </button>
                     {Array.from({ length: totalPages }, (_, i) => (
                         <button
@@ -319,7 +319,7 @@ const BookingManager = () => {
                                 : 'bg-white border border-gray-300 hover:bg-gray-50 text-gray-700'
                         }`}
                     >
-                        Tiep theo
+                        Tiếp theo
                     </button>
                 </div>
             )}
@@ -329,7 +329,7 @@ const BookingManager = () => {
                     <div className="text-gray-400 text-5xl mb-4">
                         <FaCalendarAlt className="mx-auto" />
                     </div>
-                    <p className="text-gray-500 text-lg">Khong tim thay don dat xe nao.</p>
+                    <p className="text-gray-500 text-lg">Không tìm thấy đơn đặt xe nào.</p>
                 </div>
             )}
 
@@ -337,7 +337,7 @@ const BookingManager = () => {
                 <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
                     <div className="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden animate-fade-in-up">
                         <div className="p-4 border-b flex justify-between items-center bg-gray-50">
-                            <h2 className="text-lg font-bold text-gray-800">Chi tiet don dat xe</h2>
+                            <h2 className="text-lg font-bold text-gray-800">Chi tiết đơn đặt xe</h2>
                             <button onClick={() => setShowDetailModal(false)} className="text-gray-400 hover:text-gray-600">
                                 <FaTimes />
                             </button>
@@ -345,7 +345,7 @@ const BookingManager = () => {
                         <div className="p-6 space-y-4">
                             <div className="flex justify-between items-start">
                                 <div>
-                                    <p className="text-sm text-gray-500">Ma don hang</p>
+                                    <p className="text-sm text-gray-500">Mã đơn hàng</p>
                                     <p className="font-bold text-blue-600 text-lg">{selectedBooking.id}</p>
                                 </div>
                                 <span className={`px-3 py-1 text-xs font-semibold rounded-full border ${getStatusColor(selectedBooking.status)}`}>
@@ -354,7 +354,7 @@ const BookingManager = () => {
                             </div>
 
                             <div className="border-t border-b py-4 space-y-3">
-                                <h3 className="font-bold text-gray-800 mb-2">Thong tin khach hang</h3>
+                                <h3 className="font-bold text-gray-800 mb-2">Thông tin khách hàng</h3>
                                 <div className="flex justify-between">
                                     <span className="text-gray-600">Email:</span>
                                     <span className="font-medium text-gray-900">{selectedBooking.userEmail || '---'}</span>
@@ -366,33 +366,33 @@ const BookingManager = () => {
                             </div>
 
                             <div className="border-b py-4 space-y-3">
-                                <h3 className="font-bold text-gray-800 mb-2">Thong tin xe</h3>
+                                <h3 className="font-bold text-gray-800 mb-2">Thông tin xe</h3>
                                 <div className="flex items-center gap-4">
                                     <div>
                                         <p className="font-bold text-gray-900">{selectedBooking.vehicleModelName || '---'}</p>
                                         <p className="text-sm text-gray-600 mt-1">
-                                            Bien so: {selectedBooking.vehicleLicensePlate || 'Chua gan'}
+                                            Biển số: {selectedBooking.vehicleLicensePlate || 'Chưa gán'}
                                         </p>
                                         <p className="text-sm text-gray-600">
-                                            Dia diem: {selectedBooking.vehicleLocation || 'Chua gan'}
+                                            Địa điểm: {selectedBooking.vehicleLocation || 'Chưa gán'}
                                         </p>
                                         <p className="text-sm text-gray-600">
-                                            Vehicle ID: {selectedBooking.vehicleId || 'Chua gan'}
+                                            Vehicle ID: {selectedBooking.vehicleId || 'Chưa gán'}
                                         </p>
                                     </div>
                                 </div>
                             </div>
 
                             <div className="space-y-3 pt-2">
-                                <h3 className="font-bold text-gray-800 mb-2">Chi tiet dat xe</h3>
+                                <h3 className="font-bold text-gray-800 mb-2">Chi tiết đặt xe</h3>
                                 <div className="flex justify-between">
-                                    <span className="text-gray-600">Thoi gian thue:</span>
+                                    <span className="text-gray-600">Thời gian thuê:</span>
                                     <span className="font-medium text-gray-900">
                                         {formatDate(selectedBooking.startDate)} - {formatDate(selectedBooking.endDate)}
                                     </span>
                                 </div>
                                 <div className="flex justify-between text-lg font-bold text-primary pt-2 border-t mt-2">
-                                    <span>Tong tien:</span>
+                                    <span>Tổng tiền:</span>
                                     <span>{formatMoney(selectedBooking.totalPrice)}d</span>
                                 </div>
                             </div>
@@ -402,7 +402,7 @@ const BookingManager = () => {
                                 onClick={() => setShowDetailModal(false)}
                                 className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 font-medium"
                             >
-                                Dong
+                                Đóng
                             </button>
                         </div>
                     </div>

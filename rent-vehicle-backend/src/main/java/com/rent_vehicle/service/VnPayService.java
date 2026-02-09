@@ -7,9 +7,11 @@ import com.rent_vehicle.model.Booking;
 import com.rent_vehicle.model.Payment;
 import com.rent_vehicle.repository.BookingRepository;
 import com.rent_vehicle.repository.PaymentRepository;
+import com.rent_vehicle.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -55,8 +57,10 @@ public class VnPayService {
     @Value("${app.frontend.base-url:http://localhost:5173}")
     private String frontendBaseUrl;
 
-    public VnPayPaymentUrlResponse createPaymentUrl(Long userId, Long bookingId, String clientIp) {
+    @PreAuthorize("hasAnyAuthority('USER','ADMIN')")
+    public VnPayPaymentUrlResponse createPaymentUrl(Long bookingId, String clientIp) {
         validateConfig();
+        Long userId = SecurityUtils.getCurrentUserId();
 
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new AppException(ErrorCode.BOOKING_NOT_FOUND));

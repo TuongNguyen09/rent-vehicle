@@ -7,7 +7,6 @@ import com.rent_vehicle.dto.response.PageResponse;
 import com.rent_vehicle.service.PaymentService;
 import com.rent_vehicle.dto.response.VnPayPaymentUrlResponse;
 import com.rent_vehicle.service.VnPayService;
-import com.rent_vehicle.util.SecurityUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -96,12 +95,11 @@ public class PaymentController {
             @RequestParam Long bookingId,
             HttpServletRequest request
     ) {
-        Long userId = SecurityUtils.getCurrentUserId();
         String clientIp = extractClientIp(request);
 
         return ApiResponse.<VnPayPaymentUrlResponse>builder()
                 .message("VNPay url created successfully!")
-                .result(vnPayService.createPaymentUrl(userId, bookingId, clientIp))
+                .result(vnPayService.createPaymentUrl(bookingId, clientIp))
                 .build();
     }
 

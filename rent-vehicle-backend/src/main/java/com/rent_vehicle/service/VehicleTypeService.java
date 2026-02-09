@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +24,7 @@ import java.util.stream.Collectors;
 public class VehicleTypeService {
     private final VehicleTypeRepository vehicleTypeRepository;
 
+    @PreAuthorize("hasAuthority('ADMIN')")
     public VehicleTypeResponse create(CreateVehicleTypeRequest request) {
         // Check duplicate name
         if (vehicleTypeRepository.findByName(request.getName()).isPresent()) {
@@ -38,6 +40,7 @@ public class VehicleTypeService {
         return toResponse(saved);
     }
 
+    @PreAuthorize("hasAuthority('ADMIN')")
     public VehicleTypeResponse update(Long id, CreateVehicleTypeRequest request) {
         VehicleType vehicleType = vehicleTypeRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.VEHICLE_TYPE_NOT_FOUND));
@@ -53,6 +56,7 @@ public class VehicleTypeService {
         return toResponse(vehicleTypeRepository.save(vehicleType));
     }
 
+    @PreAuthorize("hasAuthority('ADMIN')")
     public void delete(Long id) {
         VehicleType vehicleType = vehicleTypeRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.VEHICLE_TYPE_NOT_FOUND));

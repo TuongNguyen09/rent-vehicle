@@ -26,12 +26,17 @@ public class TokenService {
     @Value("${auth.admin-otp-duration:300}")
     private long adminOtpDuration; // 5 minutes
 
+    @Value("${auth.password-otp-duration:300}")
+    private long passwordOtpDuration; // 5 minutes
+
     // Redis key prefixes
     private static final String REFRESH_TOKEN_PREFIX = "refresh_token:";
     private static final String SESSION_PREFIX = "session:";
     private static final String BLACKLIST_PREFIX = "blacklist:";
     private static final String USER_SESSIONS_PREFIX = "user_sessions:";
     private static final String ADMIN_OTP_PREFIX = "admin_otp:";
+    private static final String PASSWORD_CHANGE_OTP_PREFIX = "password_change_otp:";
+    private static final String PASSWORD_RESET_OTP_PREFIX = "password_reset_otp:";
 
     /**
      * Lưu refresh token vào Redis với session ID
@@ -193,7 +198,45 @@ public class TokenService {
         return adminOtpDuration;
     }
 
+    public void savePasswordChangeOtp(String email, String otpCode) {
+        String key = PASSWORD_CHANGE_OTP_PREFIX + normalizeEmail(email);
+        redisTemplate.opsForValue().set(key, otpCode, passwordOtpDuration, TimeUnit.SECONDS);
+    }
+
+    public String getPasswordChangeOtp(String email) {
+        String key = PASSWORD_CHANGE_OTP_PREFIX + normalizeEmail(email);
+        return redisTemplate.opsForValue().get(key);
+    }
+
+    public void deletePasswordChangeOtp(String email) {
+        String key = PASSWORD_CHANGE_OTP_PREFIX + normalizeEmail(email);
+        redisTemplate.delete(key);
+    }
+
+    public void savePasswordResetOtp(String email, String otpCode) {
+        String key = PASSWORD_RESET_OTP_PREFIX + normalizeEmail(email);
+        redisTemplate.opsForValue().set(key, otpCode, passwordOtpDuration, TimeUnit.SECONDS);
+    }
+
+    public String getPasswordResetOtp(String email) {
+        String key = PASSWORD_RESET_OTP_PREFIX + normalizeEmail(email);
+        return redisTemplate.opsForValue().get(key);
+    }
+
+    public void deletePasswordResetOtp(String email) {
+        String key = PASSWORD_RESET_OTP_PREFIX + normalizeEmail(email);
+        redisTemplate.delete(key);
+    }
+
+    public long getPasswordOtpDuration() {
+        return passwordOtpDuration;
+    }
+
     private String normalizeUsername(String username) {
         return username == null ? "" : username.trim().toLowerCase();
+    }
+
+    private String normalizeEmail(String email) {
+        return email == null ? "" : email.trim().toLowerCase();
     }
 }

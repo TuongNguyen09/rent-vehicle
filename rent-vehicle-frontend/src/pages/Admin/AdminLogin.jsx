@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { FaSpinner, FaLock, FaUserShield } from 'react-icons/fa';
 import authService from '../../services/authService';
 import { useAuth } from '../../contexts/AuthContext';
@@ -40,10 +40,10 @@ const AdminLogin = () => {
                     },
                 });
             } else {
-                setError(response.message || 'Khong the dang nhap admin.');
+                setError(response.message || 'Không thể đăng nhập admin.');
             }
         } catch (err) {
-            setError(err?.response?.data?.message || 'Khong the dang nhap admin.');
+            setError(err?.response?.data?.message || 'Không thể đăng nhập admin.');
         } finally {
             setLoading(false);
         }
@@ -57,7 +57,7 @@ const AdminLogin = () => {
                         <FaUserShield className="text-2xl" />
                     </div>
                     <h1 className="text-2xl font-bold text-gray-900">Admin Login</h1>
-                    <p className="text-sm text-gray-500 mt-1">Dang nhap de tiep tuc vao Dashboard</p>
+                    <p className="text-sm text-gray-500 mt-1">Đăng nhập để tiếp tục vào Dashboard</p>
                 </div>
 
                 {error && (
@@ -86,7 +86,7 @@ const AdminLogin = () => {
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 className="w-full border border-gray-300 rounded-lg p-2.5 pr-10 outline-none focus:border-primary"
-                                placeholder="Nhập password admin"
+                                placeholder="Nhập mật khẩu admin"
                                 required
                             />
                             <FaLock className="absolute right-3 top-3 text-gray-400" />
@@ -101,13 +101,19 @@ const AdminLogin = () => {
                         {loading ? (
                             <span className="inline-flex items-center gap-2">
                                 <FaSpinner className="animate-spin" />
-                                DANG GUI MA...
+                                ĐANG GỬI MÃ...
                             </span>
                         ) : (
-                            'TIEP TUC XAC MINH'
+                            'TIẾP TỤC XÁC MINH'
                         )}
                     </button>
                 </form>
+
+                <div className="text-center mt-4 text-sm">
+                    <Link to="/forgot-password" className="text-primary hover:underline font-medium">
+                        Quên mật khẩu admin?
+                    </Link>
+                </div>
             </div>
         </div>
     );

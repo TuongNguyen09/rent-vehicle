@@ -90,6 +90,7 @@ jwt:
 
 auth:
   admin-otp-duration: ${ADMIN_OTP_DURATION:300}
+  password-otp-duration: ${PASSWORD_OTP_DURATION:300}
 
 app:
   frontend:

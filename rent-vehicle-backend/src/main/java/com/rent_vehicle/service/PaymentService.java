@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,6 +27,7 @@ public class PaymentService {
     private final PaymentRepository paymentRepository;
     private final BookingRepository bookingRepository;
 
+    @PreAuthorize("hasAuthority('ADMIN')")
     public PaymentResponse createPayment(CreatePaymentRequest request) {
         Booking booking = bookingRepository.findById(request.getBookingId())
                 .orElseThrow(() -> new AppException(ErrorCode.BOOKING_NOT_FOUND));
@@ -48,6 +50,7 @@ public class PaymentService {
         return toResponse(saved);
     }
 
+    @PreAuthorize("hasAuthority('ADMIN')")
     public PaymentResponse updatePaymentStatus(Long paymentId, String status) {
         Payment payment = paymentRepository.findById(paymentId)
                 .orElseThrow(() -> new AppException(ErrorCode.PAYMENT_NOT_FOUND));
@@ -66,6 +69,7 @@ public class PaymentService {
     }
 
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('ADMIN')")
     public PaymentResponse getPaymentById(Long paymentId) {
         Payment payment = paymentRepository.findById(paymentId)
                 .orElseThrow(() -> new AppException(ErrorCode.PAYMENT_NOT_FOUND));
@@ -73,6 +77,7 @@ public class PaymentService {
     }
 
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('ADMIN')")
     public List<PaymentResponse> getPaymentsByBooking(Long bookingId) {
         bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new AppException(ErrorCode.BOOKING_NOT_FOUND));
@@ -83,6 +88,7 @@ public class PaymentService {
     }
 
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('ADMIN')")
     public List<PaymentResponse> getPaymentsByStatus(String status) {
         Payment.PaymentStatus paymentStatus = Payment.PaymentStatus.valueOf(status);
         return paymentRepository.findByStatus(paymentStatus).stream()
@@ -91,6 +97,7 @@ public class PaymentService {
     }
 
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('ADMIN')")
     public List<PaymentResponse> getAll() {
         return paymentRepository.findAll().stream()
                 .map(this::toResponse)
@@ -98,6 +105,7 @@ public class PaymentService {
     }
 
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('ADMIN')")
     public PageResponse<PaymentResponse> getAllPaginated(int page, int size) {
         Pageable pageable = PageRequest.of(page - 1, size);
         Page<Payment> pageData = paymentRepository.findAll(pageable);

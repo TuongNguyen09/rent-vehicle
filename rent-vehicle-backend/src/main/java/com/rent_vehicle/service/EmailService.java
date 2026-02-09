@@ -1,7 +1,12 @@
 package com.rent_vehicle.service;
 
+import com.rent_vehicle.exception.AppException;
+import com.rent_vehicle.exception.ErrorCode;
 import com.rent_vehicle.model.Booking;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.mail.MailAuthenticationException;
+import org.springframework.mail.MailException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -9,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class EmailService {
 
     private final JavaMailSender mailSender;
@@ -77,6 +83,66 @@ public class EmailService {
         sendSimpleMessage(to, subject, body);
     }
 
+    public void sendPasswordChangeOtpEmail(String to, String fullName, String otpCode, long expiresInSeconds) {
+        String subject = "Password change verification code";
+        long minutes = Math.max(1, expiresInSeconds / 60);
+
+        String body = """
+                Hello %s,
+
+                Your password change verification code is: %s
+                This code will expire in %d minute(s).
+
+                If you did not request this action, please secure your account immediately.
+                """.formatted(fullName == null ? "User" : fullName, otpCode, minutes);
+
+        sendSimpleMessage(to, subject, body);
+    }
+
+    public void sendPasswordResetOtpEmail(String to, String fullName, String otpCode, long expiresInSeconds) {
+        String subject = "Password reset verification code";
+        long minutes = Math.max(1, expiresInSeconds / 60);
+
+        String body = """
+                Hello %s,
+
+                Your password reset verification code is: %s
+                This code will expire in %d minute(s).
+
+                If you did not request a password reset, please ignore this email.
+                """.formatted(fullName == null ? "User" : fullName, otpCode, minutes);
+
+        sendSimpleMessage(to, subject, body);
+    }
+
+    public void sendPasswordChangedSuccessEmail(String to, String fullName) {
+        String subject = "Password changed successfully";
+
+        String body = """
+                Hello %s,
+
+                Your account password has been changed successfully.
+
+                If you did not perform this action, please contact support immediately.
+                """.formatted(fullName == null ? "User" : fullName);
+
+        sendSimpleMessage(to, subject, body);
+    }
+
+    public void sendPasswordResetSuccessEmail(String to, String fullName) {
+        String subject = "Password reset successfully";
+
+        String body = """
+                Hello %s,
+
+                Your account password has been reset successfully.
+
+                If you did not perform this action, please contact support immediately.
+                """.formatted(fullName == null ? "User" : fullName);
+
+        sendSimpleMessage(to, subject, body);
+    }
+
     private void sendSimpleMessage(String to, String subject, String text) {
         SimpleMailMessage message = new SimpleMailMessage();
         if (fromEmail != null && !fromEmail.isBlank()) {
@@ -85,6 +151,15 @@ public class EmailService {
         message.setTo(to);
         message.setSubject(subject);
         message.setText(text);
-        mailSender.send(message);
+
+        try {
+            mailSender.send(message);
+        } catch (MailAuthenticationException exception) {
+            log.error("Mail authentication failed for recipient {}", to);
+            throw new AppException(ErrorCode.EMAIL_SEND_FAILED);
+        } catch (MailException exception) {
+            log.error("Failed to send email to {}: {}", to, exception.getMessage());
+            throw new AppException(ErrorCode.EMAIL_SEND_FAILED);
+        }
     }
 }

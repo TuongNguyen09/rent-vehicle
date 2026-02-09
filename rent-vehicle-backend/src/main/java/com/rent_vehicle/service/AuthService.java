@@ -8,6 +8,7 @@ import com.rent_vehicle.exception.ErrorCode;
 import com.rent_vehicle.model.User;
 import com.rent_vehicle.repository.UserRepository;
 import com.rent_vehicle.util.JwtUtil;
+import com.rent_vehicle.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -93,12 +94,17 @@ public class AuthService {
 
         String otpCode = generateOtpCode();
         tokenService.saveAdminOtp(normalizedUsername, otpCode);
-        emailService.sendAdminLoginOtpEmail(
-                user.getEmail(),
-                user.getFullName(),
-                otpCode,
-                tokenService.getAdminOtpDuration()
-        );
+        try {
+            emailService.sendAdminLoginOtpEmail(
+                    user.getEmail(),
+                    user.getFullName(),
+                    otpCode,
+                    tokenService.getAdminOtpDuration()
+            );
+        } catch (RuntimeException exception) {
+            tokenService.deleteAdminOtp(normalizedUsername);
+            throw exception;
+        }
 
         return ApiResponse.builder()
                 .message("Verification code sent to email")
@@ -133,6 +139,148 @@ public class AuthService {
 
         tokenService.deleteAdminOtp(normalizedUsername);
         return generateTokens(user);
+    }
+
+    public ApiResponse<?> requestChangePasswordOtp() {
+        String email = SecurityUtils.getCurrentUserEmail();
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        ensureLocalAccount(user);
+
+        String otpCode = generateOtpCode();
+        tokenService.savePasswordChangeOtp(user.getEmail(), otpCode);
+        try {
+            emailService.sendPasswordChangeOtpEmail(
+                    user.getEmail(),
+                    user.getFullName(),
+                    otpCode,
+                    tokenService.getPasswordOtpDuration()
+            );
+        } catch (RuntimeException exception) {
+            tokenService.deletePasswordChangeOtp(user.getEmail());
+            throw exception;
+        }
+
+        return ApiResponse.builder()
+                .message("Verification code sent to email")
+                .result(Map.of(
+                        "email", user.getEmail(),
+                        "expiresIn", tokenService.getPasswordOtpDuration()
+                ))
+                .build();
+    }
+
+    public ApiResponse<?> confirmChangePassword(String code, String oldPassword, String newPassword, String confirmPassword) {
+        if (code == null || code.isBlank() || oldPassword == null || oldPassword.isBlank()) {
+            throw new AppException(ErrorCode.INVALID_REQUEST);
+        }
+
+        String email = SecurityUtils.getCurrentUserEmail();
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        ensureLocalAccount(user);
+        validatePassword(newPassword, confirmPassword);
+
+        if (user.getPassword() == null || !passwordEncoder.matches(oldPassword, user.getPassword())) {
+            throw new AppException(ErrorCode.INVALID_OLD_PASSWORD);
+        }
+
+        String storedOtp = tokenService.getPasswordChangeOtp(user.getEmail());
+        if (storedOtp == null) {
+            throw new AppException(ErrorCode.OTP_EXPIRED);
+        }
+
+        if (!storedOtp.equals(code.trim())) {
+            throw new AppException(ErrorCode.INVALID_OTP);
+        }
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+
+        tokenService.deletePasswordChangeOtp(user.getEmail());
+        tokenService.deleteAllRefreshTokens(user.getId());
+        try {
+            emailService.sendPasswordChangedSuccessEmail(user.getEmail(), user.getFullName());
+        } catch (RuntimeException exception) {
+            log.warn("Password changed but failed to send confirmation email for {}", user.getEmail());
+        }
+
+        return ApiResponse.builder()
+                .message("Password changed successfully")
+                .build();
+    }
+
+    public ApiResponse<?> requestForgotPasswordOtp(String email) {
+        if (email == null || email.isBlank()) {
+            throw new AppException(ErrorCode.INVALID_REQUEST);
+        }
+
+        String normalizedEmail = normalizeEmail(email);
+        User user = userRepository.findByEmail(normalizedEmail)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        ensureLocalAccount(user);
+
+        String otpCode = generateOtpCode();
+        tokenService.savePasswordResetOtp(user.getEmail(), otpCode);
+        try {
+            emailService.sendPasswordResetOtpEmail(
+                    user.getEmail(),
+                    user.getFullName(),
+                    otpCode,
+                    tokenService.getPasswordOtpDuration()
+            );
+        } catch (RuntimeException exception) {
+            tokenService.deletePasswordResetOtp(user.getEmail());
+            throw exception;
+        }
+
+        return ApiResponse.builder()
+                .message("Verification code sent to email")
+                .result(Map.of(
+                        "email", user.getEmail(),
+                        "expiresIn", tokenService.getPasswordOtpDuration()
+                ))
+                .build();
+    }
+
+    public ApiResponse<?> confirmForgotPassword(String email, String code, String newPassword, String confirmPassword) {
+        if (email == null || email.isBlank() || code == null || code.isBlank()) {
+            throw new AppException(ErrorCode.INVALID_REQUEST);
+        }
+
+        String normalizedEmail = normalizeEmail(email);
+        User user = userRepository.findByEmail(normalizedEmail)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        ensureLocalAccount(user);
+        validatePassword(newPassword, confirmPassword);
+
+        String storedOtp = tokenService.getPasswordResetOtp(user.getEmail());
+        if (storedOtp == null) {
+            throw new AppException(ErrorCode.OTP_EXPIRED);
+        }
+
+        if (!storedOtp.equals(code.trim())) {
+            throw new AppException(ErrorCode.INVALID_OTP);
+        }
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+
+        tokenService.deletePasswordResetOtp(user.getEmail());
+        tokenService.deleteAllRefreshTokens(user.getId());
+        try {
+            emailService.sendPasswordResetSuccessEmail(user.getEmail(), user.getFullName());
+        } catch (RuntimeException exception) {
+            log.warn("Password reset but failed to send confirmation email for {}", user.getEmail());
+        }
+
+        return ApiResponse.builder()
+                .message("Password reset successfully")
+                .build();
     }
 
     /**
@@ -275,7 +423,31 @@ public class AuthService {
         return String.valueOf(otp);
     }
 
+    private void ensureLocalAccount(User user) {
+        if (!"LOCAL".equalsIgnoreCase(user.getAuthProvider())) {
+            throw new AppException(ErrorCode.PASSWORD_CHANGE_NOT_ALLOWED);
+        }
+    }
+
+    private void validatePassword(String newPassword, String confirmPassword) {
+        if (newPassword == null || confirmPassword == null) {
+            throw new AppException(ErrorCode.INVALID_REQUEST);
+        }
+
+        if (!newPassword.equals(confirmPassword)) {
+            throw new AppException(ErrorCode.PASSWORD_NOT_MATCH);
+        }
+
+        if (newPassword.trim().length() < 6) {
+            throw new AppException(ErrorCode.INVALID_PASSWORD);
+        }
+    }
+
     private String normalizeUsername(String username) {
         return username == null ? "" : username.trim().toLowerCase();
+    }
+
+    private String normalizeEmail(String email) {
+        return email == null ? "" : email.trim().toLowerCase();
     }
 }

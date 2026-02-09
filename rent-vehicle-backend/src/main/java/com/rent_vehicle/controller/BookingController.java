@@ -5,7 +5,6 @@ import com.rent_vehicle.dto.response.ApiResponse;
 import com.rent_vehicle.dto.response.BookingResponse;
 import com.rent_vehicle.dto.response.PageResponse;
 import com.rent_vehicle.service.BookingService;
-import com.rent_vehicle.util.SecurityUtils;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -23,10 +22,9 @@ public class BookingController {
 
     @PostMapping
     public ApiResponse<BookingResponse> createBooking(@RequestBody CreateBookingRequest request) {
-        Long userId = SecurityUtils.getCurrentUserId();
         return ApiResponse.<BookingResponse>builder()
                 .message("Booking created successfully!")
-                .result(bookingService.createBooking(userId, request))
+                .result(bookingService.createBooking(request))
                 .build();
     }
 
@@ -62,10 +60,9 @@ public class BookingController {
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "10") Integer size
     ) {
-        Long userId = SecurityUtils.getCurrentUserId();
         return ApiResponse.<PageResponse<BookingResponse>>builder()
                 .message("Your bookings retrieved successfully!")
-                .result(bookingService.getMyBookings(userId, status, fromDate, toDate, page, size))
+                .result(bookingService.getMyBookings(status, fromDate, toDate, page, size))
                 .build();
     }
 
